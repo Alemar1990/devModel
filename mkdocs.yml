@@ -1,0 +1,25 @@
+site_name: easy-deco Documentation
+
+theme:
+  name: material
+
+repo_name: easy-deco
+repo_url: https://github.com/crivero7/easy-deco
+edit_uri: ""
+site_dir: _build/html
+
+nav:
+    - Introduction: 'index.md'
+    - Install: 'install.md'
+    - QuickStart: 'quick_start.md'
+    - API Reference: 'api_reference.md'
+    - User Guide: 'user_guide.md'
+    - Contributing: 'contributing.md'
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - mkautodoc
+
+extra_css:
+    - css/custom.css
