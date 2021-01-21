@@ -21,7 +21,15 @@ class Eda():
 
     def _check(self, data, **kwargs):
         """
-
+        Check the input conditions for functions
+        
+        args:
+        -----------
+            data: dataset to check 
+            kwargs: conditions for the functions 
+        
+        return:
+        -----------
         """
         kwargs_default = {"empty": None,
                           "isntance": None}
@@ -37,16 +45,32 @@ class Eda():
     @staticmethod
     def _check_empty(data):
         """
-
+        Check if the data variable is empty
+        
+        args:
+        -----------
+            data (DataFrame):  dataset to check if not empty
+        return:
+        -----------
+            (boolen): boolean variable specifying if not empty
         """
         if data.empty:
             raise ValueError("data can not be empty")
         
-        return True
+        return False
 
     @staticmethod
     def _check_instance(data, inst=pd.DataFrame):
         """
+        Check if the input instance is correct
+        
+        args:
+        -----------
+            data (DataFrame):  dataset to check if not empty
+            isnt (type): specify the instance
+        return:
+        -----------     
+            (boolen): boolean variable specifying if it is the same instance  
         """
         if not isinstance(data, inst):
             warning.warn("data is not of type pandas.DatFrame")
@@ -55,17 +79,31 @@ class Eda():
 
     def describe(self):
         """
-        args:
+        Calculate the general characteristics of the data set
 
         return:
-
+        -----------
+            self.description (Series): pd.Series with an overview of the dataset with the following fields
+                                        - Number of Observations
+                                         - Unique Values
+                                         - Unique Values (%)
+                                         - Missing Values (Num)
+                                         - Missing Values (%)
+                                         - Zeros Values (Num)
+                                         - Zeros Values (%)
+                                         - Most frequent value
+                                         - Most Frequency
+                                         - Less Frequent Value
+                                         - Less Frequency
+                                         - Memory Size
         """
-
         if self.data is None:
             raise ValueError("there is not any data")
 
         options = {"empty": True,
                    "instance": pd.DataFrame}
+        
+        self._check(self.data, **options)
 
         summary = {"Number of features": self.data.shape[1],
                    "Number of observations": self.data.shape[0],
@@ -90,9 +128,16 @@ class Eda():
     @staticmethod
     def get_duplicates(df: pd.DataFrame, columns = None):
         """
-        args:
+        Calculate the number of rows that are duplicates within the data set
 
+        args:
+        -----------
+            df (DataFrame) : dataset to be checked for duplicates
+            columns (list) : List of features to consider when checking for duplicates
+        
         return:
+        -----------
+            duplicates (DataFrame) : dataframe with the duplicate rows in the dataset    
         """
         duplicates = df[df.duplicated(subset=columns, keep=False)].groupby(
                         df.columns.values.tolist()).size().reset_index(name="count"). \
@@ -103,9 +148,15 @@ class Eda():
     @staticmethod
     def get_missingValues(df):
         """
+        Calculate the number of missing values
+
         args:
+        -----------
+            df (DataFrame or Series): dataset that will be checked for missing values
 
         return:
+        -----------
+            (int): integer value with the number of missing values
         """
         if type(df) == type(pd.DataFrame()):
             return df.isnull().sum().sum()
@@ -116,9 +167,15 @@ class Eda():
     @staticmethod
     def get_zerosValues(df):
         """
+        Calculate the number of values equal to zero
+
         args:
+        -----------
+            df (DataFrame or Series): dataset that will be checked for values equal to zero
 
         return:
+        -----------
+            (int): integer value with the number of values equal to 0
         """
         return df.size - np.count_nonzero(df.values)
 
