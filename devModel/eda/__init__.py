@@ -1,1 +1,1 @@
-from .core import Greeting
+from .core import Eda
