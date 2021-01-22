@@ -1,4 +1,5 @@
 import pandas as pd
+from pandas.api.types import is_numeric_dtype
 import numpy as np
 import warnings
 
@@ -32,7 +33,8 @@ class Eda():
         -----------
         """
         kwargs_default = {"empty": None,
-                          "isntance": None}
+                          "instance": None,
+                          "type": None}
 
         options = {key: kwargs[key] if key in kwargs.keys() else kwargs_default[key] for key in kwargs_default.keys()}
         
@@ -41,6 +43,9 @@ class Eda():
 
         if options["instance"]:
             self._check_instance(data, inst=options["instance"])
+        
+        if options["type"]:
+            self._check_type(data, type=options["type"])
 
     @staticmethod
     def _check_empty(data):
@@ -49,7 +54,7 @@ class Eda():
         
         args:
         -----------
-            data (DataFrame):  dataset to check if not empty
+            data (DataFrame):  dataset to check
         return:
         -----------
             (boolen): boolean variable specifying if not empty
@@ -66,8 +71,8 @@ class Eda():
         
         args:
         -----------
-            data (DataFrame):  dataset to check if not empty
-            isnt (type): specify the instance
+            data (DataFrame):  dataset to check
+            isnt (instance): specify the instance
         return:
         -----------     
             (boolen): boolean variable specifying if it is the same instance  
@@ -76,10 +81,32 @@ class Eda():
             warning.warn("data is not of type pandas.DatFrame")
 
         return True
-
-    def describe(self):
+    
+    @staticmethod
+    def _check_type(data, type="numeric"):
         """
-        Calculate the general characteristics of the data set
+        Check if the input type is correct
+
+         args:
+        -----------
+            data (DataFrame or Series):  data to check 
+            type (str): specify the type
+
+        return:
+        -----------     
+            ctype (boolen): boolean variable specifying if it is the right type       
+        """
+        if type == "numeric":
+            ctype = is_numeric_dtype(data)
+        
+        if ctype:
+            return ctype
+        else:
+            raise ValueError("data is not the right type") 
+
+    def summary(self):
+        """
+        Calculate the general characteristics of the dataset
 
         return:
         -----------
@@ -128,7 +155,7 @@ class Eda():
     @staticmethod
     def get_duplicates(df: pd.DataFrame, columns = None):
         """
-        Calculate the number of rows that are duplicates within the data set
+        Calculate the number of rows that are duplicates within the dataset
 
         args:
         -----------
@@ -179,4 +206,138 @@ class Eda():
         """
         return df.size - np.count_nonzero(df.values)
 
+    def statistics(self):
+        """
+        Calculates the statistics of each of the numerical features within the dataset.
+
+        return:
+        -----------
+            (DataFrame): a dataframe with a statistical summary of each of the features with 
+                         the following fields:
+                        - Mean
+                        - Standard Deviation
+                        - Variance
+                        - Coefficient of variation (CV)
+                        - Sum
+                        - Minimum Value
+                        - Quantile - 0.25
+                        - Median
+                        - Quantile - 0.75
+                        - Maximum Value
+                        - Median Absolute Deviation (MAD)
+                        - Interquartile range (IQR)
+                        - Range
+                        - Kurtosis
+                        - skewness                         
+        """
+        features = self.data.select_dtypes(include="number").columns.values.tolist()
+        statistics = {key: self.get_numericStats(self.data[key]) for key in features}    
+
+        return pd.DataFrame(statistics)
+
+    def get_numericStats(self, serie):
+        """
+        Calculates the basic statistics of the specified feature
+
+        args:
+        -----------
+            series (Series): data series to which the statistics will be calculated
+
+        return:
+        -----------
+            numeric_stats (dict): statistics of the selected feature 
+        """
+
+        options = {"empty": True,
+                   "instance": pd.Series,
+                   "type": "numeric"}
         
+        self._check(serie, **options)
+
+        numeric_stats = {'Mean': serie.mean(),
+                         'Standard Deviation': serie.std(),
+                         'Variance': serie.var(),
+                         'Coefficient of variation (CV)': self.coeffv(serie),
+                         'Sum': serie.sum(),
+                         'Minimum Value': serie.min(),
+                         'Quantile - 0.25': serie.quantile(q=0.25),
+                         'Median': serie.median(),
+                         'Quantile - 0.75': serie.quantile(q=0.75),
+                         'Maximum Value': serie.max(),
+                         'Median Absolute Deviation (MAD)': self.mad(serie),
+                         'Interquartile range (IQR)': self.iqr(serie),
+                         'Range': self.range(serie),
+                         'Kurtosis': serie.kurt(),
+                         'skewness': serie.skew()}
+        
+        return numeric_stats
+
+    @staticmethod
+    def coeffv(serie):
+        """
+        The coefficient of variation is a measure of the variability of the data around
+        the mean. It is the relationship between the standard deviation and the mean of
+        the data series. It is useful for comparing the degree of variation from one 
+        data series to another, even if the means are very different from each other.
+        
+        args:
+        -----------
+            series (Series): data series to which the coefficient of variation will be calculated
+
+        return:
+        -----------
+            (float): coefficient of variation   
+        """
+        return serie.std() / serie.mean()
+    
+    @staticmethod
+    def mad(serie):
+        """
+        Finds the mean absolute deviation, which is a robust measure of variability. 
+        Variance and standard deviation are also measures of dispersion, but are 
+        more affected by extremely high or low values and non-normality. If the 
+        data are normal, the standard deviation is usually the best option to 
+        evaluate the differential. However, if your data is not normal, MAD is a 
+        better option.
+
+        args:
+        -----------
+            series (Series): data series to which the mad will be calculated
+
+        return:
+        -----------
+            (float): median absolute deviation      
+        """
+        return np.median(np.abs(serie - np.median(serie)))
+
+    @staticmethod
+    def iqr(serie):
+        """
+        Calculates the interquartile range (IQR), which is a measure of the spread of
+        the data distribution. It consists of the difference between the third and 
+        first quartiles.
+
+        args:
+        -----------
+            series (Series): data series to which the iqr will be calculated
+
+        return:
+        -----------
+            (float): interquartile range            
+        """
+        return serie.quantile(q=0.75) - serie.quantile(q=0.25)
+    
+    @staticmethod
+    def range(serie):
+        """
+        Calculates the range of the data distribution
+
+        args:
+        -----------
+            series (Series): data series to which the range will be calculated
+
+        return:
+        -----------
+            (float): data range            
+        """
+        return serie.max() - serie.min()
