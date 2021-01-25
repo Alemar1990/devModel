@@ -18,7 +18,7 @@ class Eda():
                                     }
                         }
         self.features = None
-        self.description = None
+        self.description = None #summary
 
     def _check(self, data, **kwargs):
         """
@@ -78,7 +78,7 @@ class Eda():
             (boolen): boolean variable specifying if it is the same instance  
         """
         if not isinstance(data, inst):
-            warning.warn("data is not of type pandas.DatFrame")
+            warnings.warn("data is not of type {}".format(inst))
 
         return True
     
@@ -106,7 +106,7 @@ class Eda():
 
     def summary(self):
         """
-        Calculate the general characteristics of the dataset
+        Calculates the general characteristics of the dataset
 
         return:
         -----------
@@ -144,7 +144,7 @@ class Eda():
                    "Zeros values (%)": round((self.get_zerosValues(self.data) / self.data.size) * 100, 2), 
                    "Total size in memory (Kb)": self.data.memory_usage().sum()/1000,
                    "Average observations size in memory (B)": self.data.memory_usage().sum()/self.data.shape[0],
-                   "Features numerica": self.data.select_dtypes(include=['number']).shape[1],
+                   "Features numerical": self.data.select_dtypes(include=['number']).shape[1],
                    "Features Categorical": self.data.select_dtypes(include=["object", "category"]).shape[1],
                    "Features datetimes": self.data.select_dtypes(include=["datetime"]).shape[1]}
 
@@ -204,7 +204,7 @@ class Eda():
         -----------
             (int): integer value with the number of values equal to 0
         """
-        return df.size - np.count_nonzero(df.values)
+        return  df.size - np.count_nonzero(df.values)
 
     def statistics(self):
         """
@@ -341,3 +341,98 @@ class Eda():
             (float): data range            
         """
         return serie.max() - serie.min()
+
+    def summaryFeatures(self):
+        """
+        Calculates the general characteristics of the dataset for each feature
+
+        return:
+        -----------
+            (DataFrame): characteristics of the features
+        """   
+        if self.data is None:
+            raise ValueError("there is not any data")
+
+        options = {"empty": True,
+                   "instance": pd.DataFrame}
+        
+        self._check(self.data, **options)
+
+        features = self.data.columns.tolist()
+        summary = dict()
+        summary = {key: self.get_summaryFeature(self.data[key]) for key in features}
+        self.features = pd.DataFrame(summary)
+
+        return self.features
+
+    def get_summaryFeature(self, serie):
+        """
+        Calculates the general characteristics of the data serie
+
+        args:
+        -----------
+            series (Series): data series to which the characteristics will be calculated
+
+        return:
+        -----------
+            summary (dict): characteristics of the selected feature
+        """        
+        if self.data is None:
+            raise ValueError("there is not any data")
+
+        options = {"empty": True,
+                   "instance": pd.Series}
+
+        self._check(serie, **options)
+
+        summary = {'Number of Observations': serie.count(),
+
+                   'Unique Values': serie.unique().size,
+                   'Unique Values (%)': (serie.unique().size / serie.count()) * 100,
+                   
+                   'Zeros Values (Num)': self.get_zerosValues(serie),
+                   'Zeros Values (%)': round((self.get_zerosValues(serie) / serie.size) * 100, 2),
+
+                   'Most Frequent Value': self.get_mostFrequentValue(serie)[0],
+                   'Most Frequency (Num)': self.get_mostFrequentValue(serie)[1],
+                   
+                   'Less Frequent Value': self.get_lessFrequentValue(serie)[0],
+                   'Less Frequency (Num)': self.get_lessFrequentValue(serie)[1],
+                   'Memory Size (Kb)': serie.memory_usage() / 1000}
+      
+        return summary
+
+    @staticmethod
+    def get_mostFrequentValue(serie):
+        """
+        Get the most frequent value and its frequency
+        args:
+        -----------
+            series (Series): data series to which the most frequent value will be found
+
+        return:
+        -----------
+            (tuple): most frequent value and frequency    
+        """
+        fequentValue = (serie.value_counts().reset_index().iloc[0, 0], \
+                        serie.value_counts().reset_index().iloc[0, 1])
+       
+        return fequentValue
+    
+    @staticmethod
+    def get_lessFrequentValue(serie):
+        """
+        Get the less frequent value and its frequency
+        args:
+        -----------
+            series (Series): data series to which the less frequent value will be found
+
+        return:
+        -----------
+            (tuple): less frequent value and frequency    
+        """
+        fequentValue = (serie.value_counts().reset_index().iloc[-1, 0], \
+                        serie.value_counts().reset_index().iloc[-1, 1])
+        
+        return fequentValue
+
