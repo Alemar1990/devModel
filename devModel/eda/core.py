@@ -17,8 +17,8 @@ class Eda():
                                     'constant_large':0.9
                                     }
                         }
-        self.features = None
-        self.description = None #summary
+        self.get_featuresSummary = None
+        self.get_dataSummary = None 
 
     def _check(self, data, **kwargs):
         """
@@ -34,7 +34,8 @@ class Eda():
         """
         kwargs_default = {"empty": None,
                           "instance": None,
-                          "type": None}
+                          "type": None,
+                          "attribute": None}
 
         options = {key: kwargs[key] if key in kwargs.keys() else kwargs_default[key] for key in kwargs_default.keys()}
         
@@ -46,6 +47,10 @@ class Eda():
         
         if options["type"]:
             self._check_type(data, type=options["type"])
+        
+        if options["attribute"]:
+            for i in options["attribute"]:
+                self._check_attribute(attribute=i)
 
     @staticmethod
     def _check_empty(data):
@@ -85,7 +90,7 @@ class Eda():
     @staticmethod
     def _check_type(data, type="numeric"):
         """
-        Check if the input type is correct
+        Checks if the input type is correct
 
          args:
         -----------
@@ -103,6 +108,30 @@ class Eda():
             return ctype
         else:
             raise ValueError("data is not the right type") 
+
+    def _check_attribute(self, attribute="data"):
+        """
+        Checks if the atributte exists and if not it creates it
+
+        args:
+        -----------
+             atribute (str): specify the attribute
+
+        return:
+        -----------     
+            (boolen): boolean variable specifying the attribute exists  
+        """
+        if hasattr(self, attribute):
+            if getattr(self, attribute) is not None:
+                return True
+            else:
+                if attribute == 'get_featuresSummary':
+                    self.featuresSummary()
+                elif attribute == 'get_dataSummary':
+                    self.summary()
+            return True
+        else:
+            raise ValueError("the attribute does not exist") 
 
     def summary(self):
         """
@@ -148,9 +177,9 @@ class Eda():
                    "Features Categorical": self.data.select_dtypes(include=["object", "category"]).shape[1],
                    "Features datetimes": self.data.select_dtypes(include=["datetime"]).shape[1]}
 
-        self.description = pd.Series(summary)
+        self.get_dataSummary = pd.Series(summary)
 
-        return self.description
+        return self.get_dataSummary
 
     @staticmethod
     def get_duplicates(df: pd.DataFrame, columns = None):
@@ -342,7 +371,7 @@ class Eda():
         """
         return serie.max() - serie.min()
 
-    def summaryFeatures(self):
+    def featuresSummary(self):
         """
         Calculates the general characteristics of the dataset for each feature
 
@@ -360,12 +389,12 @@ class Eda():
 
         features = self.data.columns.tolist()
         summary = dict()
-        summary = {key: self.get_summaryFeature(self.data[key]) for key in features}
-        self.features = pd.DataFrame(summary)
+        summary = {key: self.get_featureSummary(self.data[key]) for key in features}
+        self.get_featuresSummary = pd.DataFrame(summary)
 
-        return self.features
+        return self.get_featuresSummary
 
-    def get_summaryFeature(self, serie):
+    def get_featureSummary(self, serie):
         """
         Calculates the general characteristics of the data serie
 
@@ -386,6 +415,9 @@ class Eda():
         self._check(serie, **options)
 
         summary = {'Number of Observations': serie.count(),
+
+                   'Missing Values (Num)': self.get_missingValues(serie),
+                   'Missing Values (%)': round((self.get_missingValues(serie) / serie.size) * 100, 2),
 
                    'Unique Values': serie.unique().size,
                    'Unique Values (%)': (serie.unique().size / serie.count()) * 100,
@@ -414,10 +446,10 @@ class Eda():
         -----------
             (tuple): most frequent value and frequency    
         """
-        fequentValue = (serie.value_counts().reset_index().iloc[0, 0], \
+        frequentValue = (serie.value_counts().reset_index().iloc[0, 0], \
                         serie.value_counts().reset_index().iloc[0, 1])
        
-        return fequentValue
+        return frequentValue
     
     @staticmethod
     def get_lessFrequentValue(serie):
@@ -431,8 +463,44 @@ class Eda():
         -----------
             (tuple): less frequent value and frequency    
         """
-        fequentValue = (serie.value_counts().reset_index().iloc[-1, 0], \
+        frequentValue = (serie.value_counts().reset_index().iloc[-1, 0], \
                         serie.value_counts().reset_index().iloc[-1, 1])
         
-        return fequentValue
+        return frequentValue
 
+    def warnings(self):
+        """
+        """
+        if self.data is None:
+            raise ValueError("there is not any data")
+
+        options = {"empty": True,
+                   "attribute": ["get_featuresSummary", "get_dataSummary"]}
+        
+        self._check(self.data, **options)        
+        
+        alarms = dict() 
+        features = self.get_featuresSummary.columns.values.tolist()
+        # duplicates rows
+        if self.get_dataSummary['Duplicate rows (Num)'] > 0: 
+            alarms['Duplicates'] = 'Dataset has {} ({}) duplicated rows'.format(self.get_dataSummary['Duplicate rows (Num)'],
+                                                               self.get_dataSummary['Duplicate rows (%)'])
+        # missing values
+        if self.get_dataSummary['Missing Values (Num)'] > self.config['threshold']['missing']:
+            alarms['Missing Values'] = 'Dataset has {} ({}) missing values'.format(self.get_dataSummary['Missing Values (Num)'],
+                                                               self.get_dataSummary['Missing Values (%)'])
+        
+        for feature in features:
+            # missing values
+            if self.get_featuresSummary.loc['Missing Values (%)', feature] > self.config['threshold']['missing']:
+                alarms['Missing Values - '+ feature] = '{} has {} ({}) missing values'.format(feature,
+                                                             self.get_featuresSummary.loc['Missing Values (Num)', feature],
+                                                             self.get_featuresSummary.loc['Missing Values (%)', feature])
+            # high cardinality
+            if pd.api.types.is_categorical_dtype(self.get_featuresSummary[feature]) or \
+                pd.api.types.is_object_dtype(self.get_featuresSummary[feature]):
+                if self.get_featuresSummary.loc['Unique Values', feature] > self.config['threshold']['cardinality']:
+                    alarms['Cardinality - '+ feature] = '{} has a high cardinality:{}  distinct values'.format(feature,
+                                                                self.get_featuresSummary.loc['Unique Values', feature])
+
+        return alarms
