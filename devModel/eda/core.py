@@ -17,8 +17,9 @@ class Eda():
                                     'constant_large':0.9
                                     }
                         }
-        self.get_featuresSummary = None
-        self.get_dataSummary = None 
+        self.dataDescription = None 
+        self.featuresDescription = None
+        self.featurestats = None
 
     def _check(self, data, **kwargs):
         """
@@ -125,9 +126,9 @@ class Eda():
             if getattr(self, attribute) is not None:
                 return True
             else:
-                if attribute == 'get_featuresSummary':
+                if attribute == 'featuresDescription':
                     self.featuresSummary()
-                elif attribute == 'get_dataSummary':
+                elif attribute == 'dataDescription':
                     self.summary()
             return True
         else:
@@ -177,9 +178,9 @@ class Eda():
                    "Features Categorical": self.data.select_dtypes(include=["object", "category"]).shape[1],
                    "Features datetimes": self.data.select_dtypes(include=["datetime"]).shape[1]}
 
-        self.get_dataSummary = pd.Series(summary)
+        self.dataDescription = pd.Series(summary)
 
-        return self.get_dataSummary
+        return self.dataDescription
 
     @staticmethod
     def get_duplicates(df: pd.DataFrame, columns = None):
@@ -261,8 +262,9 @@ class Eda():
         """
         features = self.data.select_dtypes(include="number").columns.values.tolist()
         statistics = {key: self.get_numericStats(self.data[key]) for key in features}    
-
-        return pd.DataFrame(statistics)
+        self.featurestats = pd.DataFrame(statistics)
+        
+        return self.featurestats
 
     def get_numericStats(self, serie):
         """
@@ -390,9 +392,9 @@ class Eda():
         features = self.data.columns.tolist()
         summary = dict()
         summary = {key: self.get_featureSummary(self.data[key]) for key in features}
-        self.get_featuresSummary = pd.DataFrame(summary)
+        self.featuresDescription = pd.DataFrame(summary)
 
-        return self.get_featuresSummary
+        return self.featuresDescription
 
     def get_featureSummary(self, serie):
         """
@@ -475,32 +477,60 @@ class Eda():
             raise ValueError("there is not any data")
 
         options = {"empty": True,
-                   "attribute": ["get_featuresSummary", "get_dataSummary"]}
+                   "attribute": ["featuresDescription", "dataDescription", "featurestats"]}
         
         self._check(self.data, **options)        
         
         alarms = dict() 
-        features = self.get_featuresSummary.columns.values.tolist()
+        features = self.featuresDescription.columns.values.tolist()
         # duplicates rows
-        if self.get_dataSummary['Duplicate rows (Num)'] > 0: 
-            alarms['Duplicates'] = 'Dataset has {} ({}) duplicated rows'.format(self.get_dataSummary['Duplicate rows (Num)'],
-                                                               self.get_dataSummary['Duplicate rows (%)'])
-        # missing values
-        if self.get_dataSummary['Missing Values (Num)'] > self.config['threshold']['missing']:
-            alarms['Missing Values'] = 'Dataset has {} ({}) missing values'.format(self.get_dataSummary['Missing Values (Num)'],
-                                                               self.get_dataSummary['Missing Values (%)'])
+        if self.dataDescription['Duplicate rows (Num)'] > 0: 
+            alarms['Duplicates'] = 'Dataset has {} ({}) duplicated rows'.format(self.dataDescription['Duplicate rows (Num)'],
+                                                               self.dataDescription['Duplicate rows (%)'])
+        # missing values - data
+        if self.dataDescription['Missing Values (Num)'] > self.config['threshold']['missing']:
+            alarms['Missing Values'] = 'Dataset has {} ({}) missing values'.format(self.dataDescription['Missing Values (Num)'],
+                                                               self.dataDescription['Missing Values (%)'])
         
         for feature in features:
             # missing values
-            if self.get_featuresSummary.loc['Missing Values (%)', feature] > self.config['threshold']['missing']:
+            if self.featuresDescription.loc['Missing Values (%)', feature] > self.config['threshold']['missing']:
                 alarms['Missing Values - '+ feature] = '{} has {} ({}) missing values'.format(feature,
-                                                             self.get_featuresSummary.loc['Missing Values (Num)', feature],
-                                                             self.get_featuresSummary.loc['Missing Values (%)', feature])
+                                                             self.featuresDescription.loc['Missing Values (Num)', feature],
+                                                             self.featuresDescription.loc['Missing Values (%)', feature])
             # high cardinality
-            if pd.api.types.is_categorical_dtype(self.get_featuresSummary[feature]) or \
-                pd.api.types.is_object_dtype(self.get_featuresSummary[feature]):
-                if self.get_featuresSummary.loc['Unique Values', feature] > self.config['threshold']['cardinality']:
+            if pd.api.types.is_categorical_dtype(self.featuresDescription[feature]) or \
+                pd.api.types.is_object_dtype(self.featuresDescription[feature]):
+                if self.featuresDescription.loc['Unique Values', feature] > self.config['threshold']['cardinality']:
                     alarms['Cardinality - '+ feature] = '{} has a high cardinality:{}  distinct values'.format(feature,
-                                                                self.get_featuresSummary.loc['Unique Values', feature])
+                                                                self.featuresDescription.loc['Unique Values', feature])
 
+            # zeros
+            if pd.api.types.is_numeric_dtype(self.featuresDescription[feature]):
+                if self.featuresDescription.loc['Zeros Values (%)', feature] > self.config['threshold']['zeros']:
+                    alarms['Zeros - '+ feature] = '{} has {} ({}) zeros values'.format(feature,
+                                                               self.featuresDescription.loc['Zeros Values (Num)', feature],
+                                                               self.featuresDescription.loc['Zeros Values (%)', feature])
+
+            # constant
+            if pd.api.types.is_numeric_dtype(self.featuresDescription[feature]):
+                value = self.featuresDescription[feature].value_counts().iloc[0]
+                if value > self.config['threshold']['constant_basic']:
+                    alarms['Constant - '+ feature] ='{} has a constant value {}'.format(feature, value)
+                
+            # high constant
+            if pd.api.types.is_numeric_dtype(self.featuresDescription[feature]):
+                value = self.featuresDescription[feature].value_counts().iloc[0]
+                if value >= (self.featuresDescription[feature].shape[0] * self.config['threshold']['constant_large']):
+                    alarms['High constant - '+ feature] = '{} has more thant 90% as {}'.format(feature, value)
+
+            # skewed 
+            if pd.api.types.is_numeric_dtype(self.featuresDescription[feature]):
+                value = self.featurestats.loc['skewness', feature]
+                if value > self.config['threshold']['skewness']:
+                    alarms['Skewed - '+ feature] = '{} is highly skewed {( )}'.format(feature, value)
+
+            # high correlation
+
+            # uniform 
         return alarms
