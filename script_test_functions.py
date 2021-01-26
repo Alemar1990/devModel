@@ -6,6 +6,7 @@ eda = Eda(df)
 #print(eda.summary())
 #print(eda.statistics())
 #print(eda.summaryFeatures())
-print(eda.warnings())
-
+#print(eda.warnings())
+#print(type(eda.featurestats))
+print(eda.featureCorrelations())
 

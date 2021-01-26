@@ -2,6 +2,7 @@ import pandas as pd
 from pandas.api.types import is_numeric_dtype
 import numpy as np
 import warnings
+from .correlation import Correlation
 
 class Eda():
 
@@ -19,7 +20,8 @@ class Eda():
                         }
         self.dataDescription = None 
         self.featuresDescription = None
-        self.featurestats = None
+        self.featuresStats = None
+        self.__correlation = Correlation()
 
     def _check(self, data, **kwargs):
         """
@@ -130,6 +132,8 @@ class Eda():
                     self.featuresSummary()
                 elif attribute == 'dataDescription':
                     self.summary()
+                elif attribute == 'featuresStats':
+                    self.statistics()
             return True
         else:
             raise ValueError("the attribute does not exist") 
@@ -262,9 +266,9 @@ class Eda():
         """
         features = self.data.select_dtypes(include="number").columns.values.tolist()
         statistics = {key: self.get_numericStats(self.data[key]) for key in features}    
-        self.featurestats = pd.DataFrame(statistics)
+        self.featuresStats = pd.DataFrame(statistics)
         
-        return self.featurestats
+        return self.featuresStats
 
     def get_numericStats(self, serie):
         """
@@ -477,7 +481,7 @@ class Eda():
             raise ValueError("there is not any data")
 
         options = {"empty": True,
-                   "attribute": ["featuresDescription", "dataDescription", "featurestats"]}
+                   "attribute": ["featuresDescription", "dataDescription", "featuresStats"]}
         
         self._check(self.data, **options)        
         
@@ -505,28 +509,23 @@ class Eda():
                     alarms['Cardinality - '+ feature] = '{} has a high cardinality:{}  distinct values'.format(feature,
                                                                 self.featuresDescription.loc['Unique Values', feature])
 
-            # zeros
-            if pd.api.types.is_numeric_dtype(self.featuresDescription[feature]):
+            if pd.api.types.is_numeric_dtype(self.featuresDescription[feature]):            
+                # zeros
                 if self.featuresDescription.loc['Zeros Values (%)', feature] > self.config['threshold']['zeros']:
                     alarms['Zeros - '+ feature] = '{} has {} ({}) zeros values'.format(feature,
                                                                self.featuresDescription.loc['Zeros Values (Num)', feature],
-                                                               self.featuresDescription.loc['Zeros Values (%)', feature])
-
-            # constant
-            if pd.api.types.is_numeric_dtype(self.featuresDescription[feature]):
+                                                               self.featuresDescription.loc['Zeros Values (%)', feature]) 
+                # constant
                 value = self.featuresDescription[feature].value_counts().iloc[0]
                 if value > self.config['threshold']['constant_basic']:
                     alarms['Constant - '+ feature] ='{} has a constant value {}'.format(feature, value)
                 
-            # high constant
-            if pd.api.types.is_numeric_dtype(self.featuresDescription[feature]):
-                value = self.featuresDescription[feature].value_counts().iloc[0]
+                # high constant
                 if value >= (self.featuresDescription[feature].shape[0] * self.config['threshold']['constant_large']):
                     alarms['High constant - '+ feature] = '{} has more thant 90% as {}'.format(feature, value)
 
-            # skewed 
-            if pd.api.types.is_numeric_dtype(self.featuresDescription[feature]):
-                value = self.featurestats.loc['skewness', feature]
+                # skewed 
+                value = self.featuresStats.loc['skewness', feature]
                 if value > self.config['threshold']['skewness']:
                     alarms['Skewed - '+ feature] = '{} is highly skewed {( )}'.format(feature, value)
 
@@ -534,3 +533,10 @@ class Eda():
 
             # uniform 
         return alarms
+
+    def featuresCorrelations(self, method="pearson", cols=None,**kwargs):
+        """
+        """
+        options = {"p_value": False}
+        
+        return self.__correlation.get_correlation(self.data, "pearson", None, options)
