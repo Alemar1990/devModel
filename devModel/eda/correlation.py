@@ -1,3 +1,5 @@
+from devModel.utilities import Utilities
+
 class Correlation():
     """
     """
@@ -9,7 +11,7 @@ class Correlation():
         """
         """
         kwargs_default = {"p_value": None}       
-        options = {key: kwargs[key] if key in kwargs.keys() else kwargs_default[key] for key in kwargs_default.keys()}
+        options = Utilities.check_default_kwargs(kwargs_default, kwargs)
 
         function_call = "_Correlation__{}".format(method.lower())
         if hasattr(self, function_call):
