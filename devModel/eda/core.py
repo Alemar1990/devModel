@@ -3,6 +3,7 @@ from pandas.api.types import is_numeric_dtype
 import numpy as np
 import warnings
 from .correlation import Correlation
+from devModel.utilities import Utilities
 
 class Eda():
 
@@ -40,7 +41,7 @@ class Eda():
                           "type": None,
                           "attribute": None}
 
-        options = {key: kwargs[key] if key in kwargs.keys() else kwargs_default[key] for key in kwargs_default.keys()}
+        options = Utilities.check_default_kwargs(kwargs_default, kwargs)
         
         if options["empty"]:
             self._check_empty(data)
@@ -540,3 +541,7 @@ class Eda():
         options = {"p_value": False}
         
         return self.__correlation.get_correlation(self.data, "pearson", None, options)
+
+if __name__ == "__main__":
+    print('Hola')
+    print('done')

@@ -12,20 +12,20 @@ class Correlation():
         options = {key: kwargs[key] if key in kwargs.keys() else kwargs_default[key] for key in kwargs_default.keys()}
 
         function_call = "_Correlation__{}".format(method.lower())
-        if hasattr(self, function_call)):
+        if hasattr(self, function_call):
             function_corr = getattr(self, function_call)
 
-        return function_corr(df, cols=cols, options)
+        return function_corr(df, cols=cols, **options)
     
     def __pearson(self, df, cols=None, **kwargs):
         """
         """
         if kwargs['p_value']:
-            corr = 
+            corr = None
         else:
             corr = df.corr('pearson') if cols is not None else df[cols].corr('pearson')
 
-        return 
+        return corr
 
     def __spearman(self, cols=None, **kwargs):
         """
