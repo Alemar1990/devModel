@@ -39,7 +39,8 @@ class Eda():
         kwargs_default = {"empty": None,
                           "instance": None,
                           "type": None,
-                          "attribute": None}
+                          "attribute": None,
+                          "Nan": None}
 
         options = Utilities.check_default_kwargs(kwargs_default, kwargs)
         
@@ -55,6 +56,9 @@ class Eda():
         if options["attribute"]:
             for i in options["attribute"]:
                 self._check_attribute(attribute=i)
+        
+        if options["Nan"]:
+            self._check_nan(data)
 
     @staticmethod
     def _check_empty(data):
@@ -88,7 +92,7 @@ class Eda():
         """
         if not isinstance(data, inst):
             warnings.warn("data is not of type {}".format(inst))
-
+            return False
         return True
     
     @staticmethod
@@ -138,6 +142,21 @@ class Eda():
             return True
         else:
             raise ValueError("the attribute does not exist") 
+
+    @staticmethod
+    def _check_nan(data):
+        """
+        """
+        if len(data.columns.tolist()) > 1:
+            if data.isna().sum().sum() > 0:
+                warnings.warn("data has missing values")
+                return True
+        if len(data.columns.tolist()) == 1:          
+            if (data.isna().sum() > 0):
+                warnings.warn("data has missing values")
+                return True       
+      
+        return False 
 
     def summary(self):
         """
@@ -208,7 +227,7 @@ class Eda():
         return duplicates
 
     @staticmethod
-    def get_missingValues(df):
+    def get_missingValues(df: pd.DataFrame):
         """
         Calculate the number of missing values
 
@@ -227,7 +246,7 @@ class Eda():
             return df.isnull().sum()
 
     @staticmethod
-    def get_zerosValues(df):
+    def get_zerosValues(df: pd.DataFrame):
         """
         Calculate the number of values equal to zero
 
@@ -535,13 +554,20 @@ class Eda():
             # uniform 
         return alarms
 
-    def featuresCorrelations(self, method="pearson", cols=None,**kwargs):
+    def featuresCorrelations(self, method="pearson", cols=None, **kwargs):
         """
         """
-        options = {"p_value": False}
+        options = {"empty": True,
+                   "instance": pd.DataFrame,
+                   "Nan": True}
         
-        return self.__correlation.get_correlation(self.data, "pearson", None, options)
+        self._check(self.data, **options)
 
-if __name__ == "__main__":
-    print('Hola')
-    print('done')
+        kwargs_default = {"p_value": False,
+                         "correction": True,
+                         "matrix": "phik_matrix"}
+        
+        options = Utilities.check_default_kwargs(kwargs_default, kwargs)
+
+        return self.__correlation.get_correlation(self.data, method, cols, **options)
+
