@@ -8,5 +8,5 @@ eda = Eda(df)
 #print(eda.summaryFeatures())
 #print(eda.warnings())
 #print(type(eda.featurestats))
-print(eda.featuresCorrelations("pearson", None, p_value= False))
+print(eda.featuresCorrelations(method="cramerv", cols=None, p_value= False))
 
