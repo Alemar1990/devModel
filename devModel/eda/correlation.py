@@ -8,6 +8,7 @@ from scipy.stats import entropy
 from sklearn import preprocessing
 from collections import Counter
 import math
+import phik
 from devModel.utilities import Utilities
 
 class Correlation():
@@ -24,7 +25,8 @@ class Correlation():
         """
         """
         kwargs_default = {"p_value": None,
-                          "correction": True}       
+                          "correction": True,
+                          "matriz": 'local'}       
         options = Utilities.check_default_kwargs(kwargs_default, kwargs)
 
         function_call = "_Correlation__{}".format(method.lower())
@@ -235,3 +237,22 @@ class Correlation():
         eta = 0.0 if numerator == 0 else np.sqrt(numerator / denominator)
 
         return eta
+
+    def __phik(self, df, **kwargs):
+        """
+        """
+        interval_cols = dict()
+        for feature in df.select_dtypes(include='number').columns.tolist():
+            interval_cols[feature] = interval_cols.get(feature, 'interval')  
+
+        if kwargs['matriz']=='local': 
+            corr = df.phik_matrix(interval_cols=interval_cols)
+        elif kwargs['matriz'] == 'global':
+            corr = df.global_phik(interval_cols=interval_cols)
+        elif kwargs['matriz'] == 'z score':
+            corr = df.significance_matrix(interval_cols=interval_cols)    
+        
+        return corr
+        
+
+
