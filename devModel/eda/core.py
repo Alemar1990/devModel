@@ -557,6 +557,34 @@ class Eda():
 
     def features_correlations(self, method="pearson", cols=None, **kwargs):
         """
+        It calculates the correlation between the different variables in the dataset. Correlation shows the 
+        strength of a relationship between two variables and is expressed numerically by the correlation coefficient. 
+        Two variables are associated when one variable gives us information about the other. On the other hand, when 
+        there is no association, the increase or decrease of one variable tells us nothing about the behavior of the 
+        other variable. Two variables are correlated when they show an increasing or decreasing trend.       
+        args:
+        -----------
+            method (str): the method by which the correlation is calculated. These are:
+                            - Pearson  -> continuous - continuous
+                            - Kendall  -> continuous - continuous
+                            - Spearman -> continuous - continuous
+                            - CramerV  -> categorical - categorical
+                            - TheilsU  -> categorical - categorical
+                            - CRatio   -> categorical - continuous
+                            - Phi      -> categorical - continuous
+            cols (list): list of features to use from the dataset
+            correction (bool): specifies whether to use skew correction in the CramerV method
+            matrix (str): specifies what type of correlation matrix to obtain from the Phi method. These are:
+                            - phik_matrix
+                            - global_phik
+                            - significance_matrix
+            p_value (bool): Instead of calculating the correlation, calculate the P-value for the pearson, 
+                            kendall, and spearman correlations
+
+        return:
+        -----------
+            corr (DataFrame): Returns a dataframe with the correlation coefficients between the variables
+
         """
         options = {"empty": True,
                    "instance": pd.DataFrame,

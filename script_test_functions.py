@@ -7,5 +7,5 @@ eda = Eda(df)
 #print(eda.statistics())
 #print(eda.features_summary())
 #print(eda.warnings())
-print(eda.features_correlations(method="phik", cols=None, p_value= False, matrix='global'))
+print(eda.features_correlations(method="phik", cols=None, p_value= False, matrix='z score'))
 
