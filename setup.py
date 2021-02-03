@@ -8,13 +8,13 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name="devModel",
     version="0.0.1",
-    author="Carlos Rivero",
-    author_email="cdrr.rivero@gmail.com",
-    description="An useful easy_deco package for any projects",
+    author="Manuel Martinez",
+    author_email="manuelmartinez27ale@gmail.com",
+    description="An useful package to develop model and makes analysis",
     long_description=long_description,
     long_description_content_type="text/markdown",
     license="MIT",
-    url="https://github.com/crivero7/easy-deco",
+    url="https://github.com/Alemar1990/devModel",
     include_package_data=True,
     packages=setuptools.find_packages(),
     install_requires=[

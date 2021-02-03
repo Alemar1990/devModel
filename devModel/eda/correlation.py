@@ -11,22 +11,19 @@ import math
 import phik
 from devModel.utilities import Utilities
 
-class Correlation():
+class Correlation:
     """
     """
 
     def __init__(self):
         pass
 
-    #if __name__ == "__main__":
-    #    df = df.dropna(inplace=True)
-
     def get_correlation(self, df, method="Pearson", cols=None, **kwargs):
         """
         """
         kwargs_default = {"p_value": None,
                           "correction": True,
-                          "matriz": 'local'}       
+                          "matrix": 'local'}       
         options = Utilities.check_default_kwargs(kwargs_default, kwargs)
 
         function_call = "_Correlation__{}".format(method.lower())
@@ -109,7 +106,7 @@ class Correlation():
         data_encoded = pd.DataFrame()
         features = df.select_dtypes(include=['category', 'object']).columns.tolist()
 
-        #check if all values of a feature are differentes, that way is eliminated from features
+        #check if all values of a feature are differents (High Cardinality), that way is eliminated from features******
 
         for feature in features:
             data_encoded[feature] = label.fit_transform(df[feature])
@@ -245,11 +242,14 @@ class Correlation():
         for feature in df.select_dtypes(include='number').columns.tolist():
             interval_cols[feature] = interval_cols.get(feature, 'interval')  
 
-        if kwargs['matriz']=='local': 
+        if kwargs['matrix']=='local': 
+            print('local')
             corr = df.phik_matrix(interval_cols=interval_cols)
-        elif kwargs['matriz'] == 'global':
+        elif kwargs['matrix'] == 'global':
+            print('global')
             corr = df.global_phik(interval_cols=interval_cols)
-        elif kwargs['matriz'] == 'z score':
+        elif kwargs['matrix'] == 'z score':
+            print('z')
             corr = df.significance_matrix(interval_cols=interval_cols)    
         
         return corr

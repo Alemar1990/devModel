@@ -2,6 +2,7 @@ import pandas as pd
 from pandas.api.types import is_numeric_dtype
 import numpy as np
 import warnings
+#from .correlation import Correlation
 from .correlation import Correlation
 from devModel.utilities import Utilities
 
@@ -19,9 +20,9 @@ class Eda():
                                     'constant_large':0.9
                                     }
                         }
-        self.dataDescription = None 
-        self.featuresDescription = None
-        self.featuresStats = None
+        self.data_description = None 
+        self.features_description = None
+        self.features_stats = None
         self.__correlation = Correlation()
 
     def _check(self, data, **kwargs):
@@ -133,11 +134,11 @@ class Eda():
             if getattr(self, attribute) is not None:
                 return True
             else:
-                if attribute == 'featuresDescription':
-                    self.featuresSummary()
-                elif attribute == 'dataDescription':
+                if attribute == 'features_description':
+                    self.features_summary()
+                elif attribute == 'data_description':
                     self.summary()
-                elif attribute == 'featuresStats':
+                elif attribute == 'features_stats':
                     self.statistics()
             return True
         else:
@@ -188,23 +189,23 @@ class Eda():
 
         summary = {"Number of features": self.data.shape[1],
                    "Number of observations": self.data.shape[0],
-                   "Missing Values (Num)": self.get_missingValues(self.data),
-                   "Missing Values (%)": round((self.get_missingValues(self.data) \
+                   "Missing Values (Num)": self.get_missing_values(self.data),
+                   "Missing Values (%)": round((self.get_missing_values(self.data) \
                                                 / self.data.size)*100, 2),
                    "Duplicate rows (Num)": self.get_duplicates(self.data).shape[0],
                    "Duplicate rows (%)": round((self.get_duplicates(self.data)['count'].sum() \
                                                 / self.data.size)*100, 2),
-                   "Zeros values (Num)": self.get_zerosValues(self.data),
-                   "Zeros values (%)": round((self.get_zerosValues(self.data) / self.data.size) * 100, 2), 
+                   "Zeros values (Num)": self.get_zeros_values(self.data),
+                   "Zeros values (%)": round((self.get_zeros_values(self.data) / self.data.size) * 100, 2), 
                    "Total size in memory (Kb)": self.data.memory_usage().sum()/1000,
                    "Average observations size in memory (B)": self.data.memory_usage().sum()/self.data.shape[0],
                    "Features numerical": self.data.select_dtypes(include=['number']).shape[1],
                    "Features Categorical": self.data.select_dtypes(include=["object", "category"]).shape[1],
                    "Features datetimes": self.data.select_dtypes(include=["datetime"]).shape[1]}
 
-        self.dataDescription = pd.Series(summary)
+        self.data_description = pd.Series(summary)
 
-        return self.dataDescription
+        return self.data_description
 
     @staticmethod
     def get_duplicates(df: pd.DataFrame, columns = None):
@@ -227,7 +228,7 @@ class Eda():
         return duplicates
 
     @staticmethod
-    def get_missingValues(df: pd.DataFrame):
+    def get_missing_values(df: pd.DataFrame):
         """
         Calculate the number of missing values
 
@@ -246,7 +247,7 @@ class Eda():
             return df.isnull().sum()
 
     @staticmethod
-    def get_zerosValues(df: pd.DataFrame):
+    def get_zeros_values(df: pd.DataFrame):
         """
         Calculate the number of values equal to zero
 
@@ -285,12 +286,12 @@ class Eda():
                         - skewness                         
         """
         features = self.data.select_dtypes(include="number").columns.values.tolist()
-        statistics = {key: self.get_numericStats(self.data[key]) for key in features}    
-        self.featuresStats = pd.DataFrame(statistics)
+        statistics = {key: self.get_numeric_stats(self.data[key]) for key in features}    
+        self.features_stats = pd.DataFrame(statistics)
         
-        return self.featuresStats
+        return self.features_stats
 
-    def get_numericStats(self, serie):
+    def get_numeric_stats(self, serie):
         """
         Calculates the basic statistics of the specified feature
 
@@ -397,7 +398,7 @@ class Eda():
         """
         return serie.max() - serie.min()
 
-    def featuresSummary(self):
+    def features_summary(self):
         """
         Calculates the general characteristics of the dataset for each feature
 
@@ -415,12 +416,12 @@ class Eda():
 
         features = self.data.columns.tolist()
         summary = dict()
-        summary = {key: self.get_featureSummary(self.data[key]) for key in features}
-        self.featuresDescription = pd.DataFrame(summary)
+        summary = {key: self.get_feature_summary(self.data[key]) for key in features}
+        self.features_description = pd.DataFrame(summary)
 
-        return self.featuresDescription
+        return self.features_description
 
-    def get_featureSummary(self, serie):
+    def get_feature_summary(self, serie):
         """
         Calculates the general characteristics of the data serie
 
@@ -442,26 +443,26 @@ class Eda():
 
         summary = {'Number of Observations': serie.count(),
 
-                   'Missing Values (Num)': self.get_missingValues(serie),
-                   'Missing Values (%)': round((self.get_missingValues(serie) / serie.size) * 100, 2),
+                   'Missing Values (Num)': self.get_missing_values(serie),
+                   'Missing Values (%)': round((self.get_missing_values(serie) / serie.size) * 100, 2),
 
                    'Unique Values': serie.unique().size,
                    'Unique Values (%)': (serie.unique().size / serie.count()) * 100,
                    
-                   'Zeros Values (Num)': self.get_zerosValues(serie),
-                   'Zeros Values (%)': round((self.get_zerosValues(serie) / serie.size) * 100, 2),
+                   'Zeros Values (Num)': self.get_zeros_values(serie),
+                   'Zeros Values (%)': round((self.get_zeros_values(serie) / serie.size) * 100, 2),
 
-                   'Most Frequent Value': self.get_mostFrequentValue(serie)[0],
-                   'Most Frequency (Num)': self.get_mostFrequentValue(serie)[1],
+                   'Most Frequent Value': self.get_most_frequent_value(serie)[0],
+                   'Most Frequency (Num)': self.get_most_frequent_value(serie)[1],
                    
-                   'Less Frequent Value': self.get_lessFrequentValue(serie)[0],
-                   'Less Frequency (Num)': self.get_lessFrequentValue(serie)[1],
+                   'Less Frequent Value': self.get_less_frequent_value(serie)[0],
+                   'Less Frequency (Num)': self.get_less_frequent_value(serie)[1],
                    'Memory Size (Kb)': serie.memory_usage() / 1000}
       
         return summary
 
     @staticmethod
-    def get_mostFrequentValue(serie):
+    def get_most_frequent_value(serie):
         """
         Get the most frequent value and its frequency
         args:
@@ -472,13 +473,13 @@ class Eda():
         -----------
             (tuple): most frequent value and frequency    
         """
-        frequentValue = (serie.value_counts().reset_index().iloc[0, 0], \
+        frequent_value = (serie.value_counts().reset_index().iloc[0, 0], \
                         serie.value_counts().reset_index().iloc[0, 1])
        
-        return frequentValue
+        return frequent_value
     
     @staticmethod
-    def get_lessFrequentValue(serie):
+    def get_less_frequent_value(serie):
         """
         Get the less frequent value and its frequency
         args:
@@ -489,10 +490,10 @@ class Eda():
         -----------
             (tuple): less frequent value and frequency    
         """
-        frequentValue = (serie.value_counts().reset_index().iloc[-1, 0], \
+        frequent_value = (serie.value_counts().reset_index().iloc[-1, 0], \
                         serie.value_counts().reset_index().iloc[-1, 1])
         
-        return frequentValue
+        return frequent_value
 
     def warnings(self):
         """
@@ -501,51 +502,51 @@ class Eda():
             raise ValueError("there is not any data")
 
         options = {"empty": True,
-                   "attribute": ["featuresDescription", "dataDescription", "featuresStats"]}
+                   "attribute": ["features_description", "data_description", "features_stats"]}
         
         self._check(self.data, **options)        
         
         alarms = dict() 
-        features = self.featuresDescription.columns.values.tolist()
+        features = self.features_description.columns.values.tolist()
         # duplicates rows
-        if self.dataDescription['Duplicate rows (Num)'] > 0: 
-            alarms['Duplicates'] = 'Dataset has {} ({}) duplicated rows'.format(self.dataDescription['Duplicate rows (Num)'],
-                                                               self.dataDescription['Duplicate rows (%)'])
+        if self.data_description['Duplicate rows (Num)'] > 0: 
+            alarms['Duplicates'] = 'Dataset has {} ({}) duplicated rows'.format(self.data_description['Duplicate rows (Num)'],
+                                                               self.data_description['Duplicate rows (%)'])
         # missing values - data
-        if self.dataDescription['Missing Values (Num)'] > self.config['threshold']['missing']:
-            alarms['Missing Values'] = 'Dataset has {} ({}) missing values'.format(self.dataDescription['Missing Values (Num)'],
-                                                               self.dataDescription['Missing Values (%)'])
+        if self.data_description['Missing Values (Num)'] > self.config['threshold']['missing']:
+            alarms['Missing Values'] = 'Dataset has {} ({}) missing values'.format(self.data_description['Missing Values (Num)'],
+                                                               self.data_description['Missing Values (%)'])
         
         for feature in features:
             # missing values
-            if self.featuresDescription.loc['Missing Values (%)', feature] > self.config['threshold']['missing']:
+            if self.features_description.loc['Missing Values (%)', feature] > self.config['threshold']['missing']:
                 alarms['Missing Values - '+ feature] = '{} has {} ({}) missing values'.format(feature,
-                                                             self.featuresDescription.loc['Missing Values (Num)', feature],
-                                                             self.featuresDescription.loc['Missing Values (%)', feature])
+                                                             self.features_description.loc['Missing Values (Num)', feature],
+                                                             self.features_description.loc['Missing Values (%)', feature])
             # high cardinality
-            if pd.api.types.is_categorical_dtype(self.featuresDescription[feature]) or \
-                pd.api.types.is_object_dtype(self.featuresDescription[feature]):
-                if self.featuresDescription.loc['Unique Values', feature] > self.config['threshold']['cardinality']:
+            if pd.api.types.is_categorical_dtype(self.features_description[feature]) or \
+                pd.api.types.is_object_dtype(self.features_description[feature]):
+                if self.features_description.loc['Unique Values', feature] > self.config['threshold']['cardinality']:
                     alarms['Cardinality - '+ feature] = '{} has a high cardinality:{}  distinct values'.format(feature,
-                                                                self.featuresDescription.loc['Unique Values', feature])
+                                                                self.features_description.loc['Unique Values', feature])
 
-            if pd.api.types.is_numeric_dtype(self.featuresDescription[feature]):            
+            if pd.api.types.is_numeric_dtype(self.features_description[feature]):            
                 # zeros
-                if self.featuresDescription.loc['Zeros Values (%)', feature] > self.config['threshold']['zeros']:
+                if self.features_description.loc['Zeros Values (%)', feature] > self.config['threshold']['zeros']:
                     alarms['Zeros - '+ feature] = '{} has {} ({}) zeros values'.format(feature,
-                                                               self.featuresDescription.loc['Zeros Values (Num)', feature],
-                                                               self.featuresDescription.loc['Zeros Values (%)', feature]) 
+                                                               self.features_description.loc['Zeros Values (Num)', feature],
+                                                               self.features_description.loc['Zeros Values (%)', feature]) 
                 # constant
-                value = self.featuresDescription[feature].value_counts().iloc[0]
+                value = self.features_description[feature].value_counts().iloc[0]
                 if value > self.config['threshold']['constant_basic']:
                     alarms['Constant - '+ feature] ='{} has a constant value {}'.format(feature, value)
                 
                 # high constant
-                if value >= (self.featuresDescription[feature].shape[0] * self.config['threshold']['constant_large']):
+                if value >= (self.features_description[feature].shape[0] * self.config['threshold']['constant_large']):
                     alarms['High constant - '+ feature] = '{} has more thant 90% as {}'.format(feature, value)
 
                 # skewed 
-                value = self.featuresStats.loc['skewness', feature]
+                value = self.features_stats.loc['skewness', feature]
                 if value > self.config['threshold']['skewness']:
                     alarms['Skewed - '+ feature] = '{} is highly skewed {( )}'.format(feature, value)
 
@@ -554,7 +555,7 @@ class Eda():
             # uniform 
         return alarms
 
-    def featuresCorrelations(self, method="pearson", cols=None, **kwargs):
+    def features_correlations(self, method="pearson", cols=None, **kwargs):
         """
         """
         options = {"empty": True,
@@ -563,11 +564,5 @@ class Eda():
         
         self._check(self.data, **options)
 
-        kwargs_default = {"p_value": False,
-                         "correction": True,
-                         "matrix": "phik_matrix"}
-        
-        options = Utilities.check_default_kwargs(kwargs_default, kwargs)
-
-        return self.__correlation.get_correlation(self.data, method, cols, **options)
+        return self.__correlation.get_correlation(self.data, method, cols, **kwargs)
 
