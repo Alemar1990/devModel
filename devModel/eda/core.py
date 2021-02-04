@@ -17,9 +17,10 @@ class Eda():
                                     'missing':0,
                                     'zeros':10,
                                     'constant_basic':100,
-                                    'constant_large':0.9
-                                    }
+                                    'constant_large':0.9,
+                                    'high_corr':0.5}
                         }
+
         self.data_description = None 
         self.features_description = None
         self.features_stats = None
@@ -517,6 +518,8 @@ class Eda():
             alarms['Missing Values'] = 'Dataset has {} ({}) missing values'.format(self.data_description['Missing Values (Num)'],
                                                                self.data_description['Missing Values (%)'])
         
+        correlation = self.features_correlations(method="pearson")
+
         for feature in features:
             # missing values
             if self.features_description.loc['Missing Values (%)', feature] > self.config['threshold']['missing']:
@@ -527,7 +530,7 @@ class Eda():
             if pd.api.types.is_categorical_dtype(self.features_description[feature]) or \
                 pd.api.types.is_object_dtype(self.features_description[feature]):
                 if self.features_description.loc['Unique Values', feature] > self.config['threshold']['cardinality']:
-                    alarms['Cardinality - '+ feature] = '{} has a high cardinality:{}  distinct values'.format(feature,
+                    alarms['Cardinality - '+ feature] = '{} has a high cardinality: {}  distinct values'.format(feature,
                                                                 self.features_description.loc['Unique Values', feature])
 
             if pd.api.types.is_numeric_dtype(self.features_description[feature]):            
@@ -551,6 +554,10 @@ class Eda():
                     alarms['Skewed - '+ feature] = '{} is highly skewed {( )}'.format(feature, value)
 
             # high correlation
+                row = correlation.loc[feature].drop(feature)
+                value = row[abs(row) > self.config['threshold']['high_corr']].index.tolist()
+                if value:
+                    alarms['High correlation - ' + feature] = '{} has a high correlation with  {}'.format(feature, value)
 
             # uniform 
         return alarms

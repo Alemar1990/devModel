@@ -64,7 +64,7 @@ class Correlation:
         elif (cols is not None) and (len(cols) == 1):
             raise ValueError("cols has to be greater than one")
         
-        df = df.dropna().reset_index(drop=True)
+        #df = df.dropna().reset_index(drop=True)
         return function_corr(df, **options)
     
     def __pearson(self, df, **kwargs):
@@ -93,9 +93,10 @@ class Correlation:
         -----------
             corr (DataFrame): returns a dataframe with the correlations of the variables between [-1 to 1]
         """
+        features =  df.select_dtypes(include=['number']).columns.tolist()
+        df = df[features].dropna().reset_index(drop=True)
 
         if kwargs['p_value']:
-            features =  df.select_dtypes(include=['number']).columns.tolist()
             rows =[]
             for feature1 in features:
                 col = []
@@ -135,8 +136,10 @@ class Correlation:
             corr (DataFrame): returns a dataframe with the correlations of the variables between [-1 to 1]        
         """
 
+        features =  df.select_dtypes(include=['number']).columns.tolist()
+        df = df[features].dropna().reset_index(drop=True)
+
         if kwargs['p_value']:
-            features =  df.select_dtypes(include=['number']).columns.tolist()
             rows =[]
             for feature1 in features:
                 col = []
@@ -179,8 +182,10 @@ class Correlation:
             corr (DataFrame): returns a dataframe with the correlations of the variables between [-1 to 1]             
         """
 
+        features =  df.select_dtypes(include=['number']).columns.tolist()
+        df = df[features].dropna().reset_index(drop=True)
+
         if kwargs['p_value']:
-            features =  df.select_dtypes(include=['number']).columns.tolist()
             rows =[]
             for feature1 in features:
                 col = []
@@ -214,7 +219,7 @@ class Correlation:
         label = preprocessing.LabelEncoder()
         data_encoded = pd.DataFrame()
         features = df.select_dtypes(include=['category', 'object']).columns.tolist()
-
+        df = df[features].dropna().reset_index(drop=True)
         #check if all values of a feature are differents (High Cardinality), that way is eliminated from features******
 
         for feature in features:
@@ -286,6 +291,8 @@ class Correlation:
 
         rows = []
         features = df.select_dtypes(include=['category', 'object']).columns.tolist()
+        df = df[features].dropna().reset_index(drop=True)
+
         for feature1 in features:
             col = []
             for feature2 in features:
@@ -369,8 +376,8 @@ class Correlation:
             corr (DataFrame): returns a dataframe with the correlations of the variables between [0 to 1]      
         """
 
-        categorical = df.select_dtypes(include=["category", "object"])
-        numerical = df.select_dtypes(include="number")
+        categorical = df.select_dtypes(include=["category", "object"]).dropna().reset_index(drop=True)
+        numerical = df.select_dtypes(include="number").dropna().reset_index(drop=True)
 
         if categorical.empty:
             raise ValueError("There is not category or object features")
@@ -452,6 +459,7 @@ class Correlation:
 
                               More information: https://pro.arcgis.com/en/pro-app/latest/tool-reference/spatial-statistics/what-is-a-z-score-what-is-a-p-value.htm
         """
+        df = df.dropna().reset_index(drop=True)
         interval_cols = dict()
         for feature in df.select_dtypes(include='number').columns.tolist():
             interval_cols[feature] = interval_cols.get(feature, 'interval')  
