@@ -8,4 +8,4 @@ eda = Eda(df)
 #print(eda.features_summary())
 #print(eda.warnings())
 #print(eda.features_correlations(method="phik", cols=None, p_value= False, matrix='z score'))
-
+print(eda.statistical_test(test='normality', alpha=0.01, cols=['Age'], analysis_indv=True))

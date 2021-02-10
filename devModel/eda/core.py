@@ -4,6 +4,7 @@ import numpy as np
 import warnings
 from .correlation import Correlation
 from devModel.utilities import Utilities
+from .statistics import Statistics
 
 class Eda():
 
@@ -24,6 +25,7 @@ class Eda():
         self.features_description = None
         self.features_stats = None
         self.__correlation = Correlation()
+        self.__statistics = Statistics()
 
     def summary(self):
         """
@@ -46,7 +48,7 @@ class Eda():
                                          - Memory Size
         """
 
-        options = {"data":True,
+        options = {"_data":True,
                    "empty": True,
                    "instance": pd.DataFrame}
         
@@ -169,7 +171,7 @@ class Eda():
             numeric_stats (dict): statistics of the selected feature 
         """
 
-        options = {"data":True,
+        options = {"_data":True,
                    "empty": True,
                    "instance": pd.Series,
                    "type": "numeric"}
@@ -273,7 +275,7 @@ class Eda():
             (DataFrame): characteristics of the features
         """   
 
-        options = {"data": True,
+        options = {"_data": True,
                    "empty": True,
                    "instance": pd.DataFrame}
         
@@ -299,7 +301,7 @@ class Eda():
             summary (dict): characteristics of the selected feature
         """        
 
-        options = {"data":True,
+        options = {"_data":True,
                    "empty": True,
                    "instance": pd.Series}
 
@@ -368,7 +370,7 @@ class Eda():
             (dict): all the issues of the data          
         """
 
-        options = {"data":True,
+        options = {"_data":True,
                    "empty": True,
                    "attribute": {"features_description": "features_summary",
                                  "data_description": "summary", 
@@ -462,7 +464,8 @@ class Eda():
             corr (DataFrame): Returns a dataframe with the correlation coefficients between the variables
 
         """
-        options = {"empty": True,
+        options = {"_data": True,
+                   "empty": True,
                    "instance": pd.DataFrame,
                    "Nan": True}
         
@@ -470,3 +473,15 @@ class Eda():
 
         return self.__correlation.get_correlation(self.data, method, cols, **kwargs)
 
+
+    def statistical_test(self, test='normality', alpha=0.01, cols=None, analysis_indv=False):
+        """
+
+        """
+        options = {"_data": True,
+                   "empty": True,
+                   "Nan": True}
+        
+        Utilities._check(self.data, None, **options)
+
+        return self.__statistics.get_test(self.data, test, alpha, cols, analysis_indv)

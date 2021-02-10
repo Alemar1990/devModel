@@ -26,13 +26,17 @@ class Utilities:
         return:
         -----------
         """
-        kwargs_default = {"empty": None,
+        kwargs_default = {"_data": None,
+                          "empty": None,
                           "instance": None,
                           "type": None,
                           "attribute": None,
                           "Nan": None}
 
         options = cls.check_default_kwargs(kwargs_default, kwargs)
+
+        if options["_data"]:
+            cls._check_data(data)
         
         if options["empty"]:
             cls._check_empty(data)
@@ -49,6 +53,23 @@ class Utilities:
         
         if options["Nan"]:
             cls._check_nan(data)
+    
+    @staticmethod
+    def _check_data(data):
+        """
+        Check if the data variable exists
+
+        args:
+        -----------
+            data (DataFrame):  dataset to check
+        return:
+        -----------
+            (boolen): boolean variable specifying if the data exists
+        """
+        if data is None:
+            raise ValueError("there is not any data")    
+
+        return True    
 
     @staticmethod
     def _check_empty(data):
