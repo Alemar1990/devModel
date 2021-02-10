@@ -133,6 +133,15 @@ class Utilities:
     @staticmethod
     def _check_nan(data):
         """
+        Checks if the data has missing values
+
+        args:
+        -----------
+             data (DataFrame): data to check
+
+        return:
+        -----------     
+            (boolen): boolean variable specifying if the data has missing values   
         """
         if len(data.columns.tolist()) > 1:
             if data.isna().sum().sum() > 0:

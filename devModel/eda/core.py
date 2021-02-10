@@ -45,10 +45,9 @@ class Eda():
                                          - Less Frequency
                                          - Memory Size
         """
-        if self.data is None:
-            raise ValueError("there is not any data")
 
-        options = {"empty": True,
+        options = {"data":True,
+                   "empty": True,
                    "instance": pd.DataFrame}
         
         Utilities._check(self.data, None, **options)
@@ -170,7 +169,8 @@ class Eda():
             numeric_stats (dict): statistics of the selected feature 
         """
 
-        options = {"empty": True,
+        options = {"data":True,
+                   "empty": True,
                    "instance": pd.Series,
                    "type": "numeric"}
         
@@ -272,10 +272,9 @@ class Eda():
         -----------
             (DataFrame): characteristics of the features
         """   
-        if self.data is None:
-            raise ValueError("there is not any data")
 
-        options = {"empty": True,
+        options = {"data": True,
+                   "empty": True,
                    "instance": pd.DataFrame}
         
         Utilities._check(self.data, None, **options)
@@ -299,10 +298,9 @@ class Eda():
         -----------
             summary (dict): characteristics of the selected feature
         """        
-        if self.data is None:
-            raise ValueError("there is not any data")
 
-        options = {"empty": True,
+        options = {"data":True,
+                   "empty": True,
                    "instance": pd.Series}
 
         Utilities._check(serie, None, **options)
@@ -363,11 +361,15 @@ class Eda():
 
     def warnings(self):
         """
-        """
-        if self.data is None:
-            raise ValueError("there is not any data")
+        Get the issues that the data has globally and by feature.
 
-        options = {"empty": True,
+        return:
+        -----------
+            (dict): all the issues of the data          
+        """
+
+        options = {"data":True,
+                   "empty": True,
                    "attribute": {"features_description": "features_summary",
                                  "data_description": "summary", 
                                  "features_stats": "statistics"}}
