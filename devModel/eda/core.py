@@ -474,7 +474,7 @@ class Eda():
         return self.__correlation.get_correlation(self.data, method, cols, **kwargs)
 
 
-    def statistical_test(self, test='normality', alpha=0.01, cols=None, analysis_indv=False, group=None, subgroups=None, feature_interest=None):
+    def statistical_test(self, test='normality', alpha=0.01, cols=None, **kwargs):
         """
 
         """
@@ -484,5 +484,4 @@ class Eda():
         
         Utilities._check(self.data, None, **options)
 
-
-        return self.__statistics.get_test(self.data, test, alpha, cols, analysis_indv, group, subgroups, feature_interest)
+        return self.__statistics.get_test(self.data, test, alpha, cols, **kwargs)

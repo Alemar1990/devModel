@@ -12,21 +12,29 @@ from scipy.stats import kruskal
 from scipy.stats import mannwhitneyu 
 from scipy.stats import wilcoxon 
 from scipy.stats import friedmanchisquare
+from devModel.utilities import Utilities
 
 class Statistics:
 
     def __init__(self):
         pass
 
-    def get_test(self, df, test='normality', alpha=0.01, cols=None, analysis_indv=False, group=None, subgroups=None, feature_interest=None):
+    def get_test(self, df, test='normality', alpha=0.01, cols=None, **kwargs):
         """
         """
         # check type 
 
+        kwargs_default = {"analysis_indv": False,
+                          "group": None,
+                          "subgroups":  None,
+                          "feature_interest": None} 
+
+        options = Utilities.check_default_kwargs(kwargs_default, kwargs)
+
         if cols is not None:
             df = df[cols]
         
-        if group is None:
+        if options["group"] is None:
 
             df = df.select_dtypes('number').dropna().reset_index(drop=True)
             features = df.columns.tolist()
@@ -38,7 +46,7 @@ class Statistics:
 
                 for feature in features:
                 
-                    if analysis_indv is True:
+                    if options["analysis_indv"] is True:
                         tests[feature] = self.normality_test(df[feature], alpha)
 
                     else:
@@ -49,15 +57,20 @@ class Statistics:
                                         'Can be fitted to a normal dist.' else 'Use Nonparametric Statistical Methods'}
 
             elif test in ['anova', 'ttest', 'p-ttest', 'kruskal-wallis', 'mann-whitney', 'wilcoxon', 'friedman']:
-                pass
+                
+                args = []
+                for feature in features:
+                    args.append(df[feature])
+
+                tests = self.distribution_comparison_test(test, alpha, *args)   
         
         #group is not None        
         else:
-            df = df.groupby(group)
+            df = df.groupby(options["group"])
             features = df.groups.keys()     
 
-            if (subgroups is not None) and (set(subgroups).issubset(set(features))):
-                features = subgroups
+            if (options["subgroups"] is not None) and (set(options["subgroups"]).issubset(set(features))):
+                features = options["subgroups"]
 
             if test == 'normality':
 
@@ -66,11 +79,11 @@ class Statistics:
 
                 for feature in features:
                 
-                    if analysis_indv is True:
-                        tests[feature] = self.normality_test(df.get_gropup[feature][feature_interest], alpha)
+                    if options["analysis_indv"] is True:
+                        tests[feature] = self.normality_test(df.get_gropup[feature][options["feature_interest"]], alpha)
 
                     else:
-                        norm_test = pd.DataFrame.from_dict(self.normality_test(df.get_gropup[feature][feature_interest], alpha), orient='index')
+                        norm_test = pd.DataFrame.from_dict(self.normality_test(df.get_gropup[feature][options["feature_interest"]], alpha), orient='index')
                         tests[feature] = {'Distribution': norm_test['Distribution'].value_counts().index[0],
                                         '# Number of tests / 5': norm_test['Distribution'].value_counts()[0],
                                         'Actions': 'Use Parametric Statistical Methods' if norm_test['Distribution'].value_counts().index[0] == \
@@ -80,7 +93,7 @@ class Statistics:
                 
                 args = []
                 for feature in features:
-                    args.append(df.get_group(feature)[feature_interest])
+                    args.append(df.get_group(feature)[options["feature_interest"]])
 
                 tests = self.distribution_comparison_test(test, alpha, *args)        
 
@@ -126,6 +139,7 @@ class Statistics:
         """
         """
         test_result=dict()
+        # Parametric Statistical Methods
         if test == 'anova':
             stat_val, p_val = f_oneway(*args)
             result = ['Same distribution' if p_val > alpha else 'Different distribution']
@@ -140,7 +154,8 @@ class Statistics:
             stat_val, p_val = ttest_rel(*args)
             result = ['Same distribution' if p_val > alpha else 'Different distribution']
             key = "Paired Student’s t-Test results"
-
+        
+        # Nonparametric Statistical Methods
         elif test == 'kruskal-wallis':
             stat_val, p_val = kruskal(*args)
             result = ['Same distribution' if p_val > alpha else 'Different distribution']
