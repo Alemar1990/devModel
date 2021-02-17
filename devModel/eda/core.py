@@ -482,7 +482,7 @@ class Eda():
         to continue to act as if we "believe" the null hypothesis is true. Or it may be a disappointing result, 
         possibly indicating we may not yet have enough data to "prove" something by rejecting the null hypothesis.
         
-        Statistics is a collection of tools that you can use to get answers to important questions about data
+        Statistics is a collection of tools that you can use to get answers to important questions about data. 
         args:
         -----------
             test (srt): statistical tests to apply to data. These are:
