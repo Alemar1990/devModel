@@ -476,7 +476,36 @@ class Eda():
 
     def statistical_test(self, test='normality', alpha=0.01, cols=None, **kwargs):
         """
+        The statistical tests provide a mechanism for making quantitative decisions about a process or processes. 
+        The intent is to determine whether there is enough evidence to "reject" a conjecture or hypothesis about 
+        the process. The conjecture is called the null hypothesis. Not rejecting may be a good result if we want 
+        to continue to act as if we "believe" the null hypothesis is true. Or it may be a disappointing result, 
+        possibly indicating we may not yet have enough data to "prove" something by rejecting the null hypothesis.
+        
+        Statistics is a collection of tools that you can use to get answers to important questions about data
+        args:
+        -----------
+            test (srt): statistical tests to apply to data. These are:
+                        - normality -> test to check if the data is normal. The tests applied are: 
+                                       Kolmogorov-Smirnov, Lilliefors, 'D’Agostino and Pearson’s, Shapiro-Wilk and 
+                                       Anderson-Darling
+                        - anova -> test to check if distributions are the same (Parametric Statistical Method)
+                        - ttest -> test to check if distributions are the same (Parametric Statistical Method)
+                        - p-ttest -> test to check if distributions are the same (Parametric Statistical Method)
+                        - kruskal-wallis -> test to check if distributions are the same (Nonparametric Statistical Method)
+                        - mann-whitney -> test to check if distributions are the same (Nonparametric Statistical Method)
+                        - wilcoxon -> test to check if distributions are the same (Nonparametric Statistical Method)
+                        - friedman -> test to check if distributions are the same (Nonparametric Statistical Method)
+            alpha (float): significance level to be established as limit
+            cols (list): list of features to use from the dataset
+            analysis_indv (bool): specifies whether you want the output of all normality tests for each feature
+            group (str): specify under which feature you want to group for the distribution comparison test (categorical feature)
+            subgroups (list): specifies which subgroups of the selected group are desired for the analysis
+            feature_interest (str): feature to use for the analysis of comparison of distributions under the selected group
 
+        return:
+        -----------
+            (dict): selected test result
         """
         options = {"_data": True,
                    "empty": True,
